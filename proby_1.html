@@ -77,6 +77,7 @@
        padding: 0px;
        border: 1px solid #404040;
        border-collapse: collapse;
+	   
    }
    
    
@@ -111,9 +112,9 @@
 <table>
 <!--  header of the table  svg "titlePanel" -->
 <tr class="header" height="50px";>
-<th colspan="2">
+<th colspan="2"bgcolor="#494949">
 
-<div>
+<div >
 		<svg id="titlePanel" width="1000px" height="50px" style="background:#494949">
 	</svg>
 		</div>
@@ -125,7 +126,7 @@
 <!-- first column svg "sidePanel" -->
 <td>
 
-	<div>
+	<div max-width: 700px;>
 		<svg id="sidePanel" width="300px" height="550px" style="background:#494949">
 		</svg>
 	</div>
@@ -185,7 +186,7 @@ $.ajax({
 	//pokazanie podstaw d3
 	
 	var title = d3.select("#titlePanel").append("text")
-		.text("AKTUALNY RUCH TRAMWAJÓW WOKÓŁ PW, stan na (wpisać datę z danych)")
+		.text("AKTUALNY RUCH TRAMWAJÓW WOKÓŁ PW, stan na 11:15, 24.09.2017")
 		.attr("x", 30)
 		.attr("y", 27.5)
 		.style("font-size", "16px")
@@ -330,7 +331,7 @@ $.ajax({
 		tramArrows.enter().append("line")
 		.attr("class", function(d){ return "tram_" + d.line + " tramGroup";})
 				.attr("x1", 0)
-                .attr("x2", 15)
+                .attr("x2", 20)
                 .attr("y1", 0)
                 .attr("y2", 0)
 				.attr("fill", "orange")
@@ -380,7 +381,7 @@ $.ajax({
 		// step: ENTER			
 		tramCircles.enter().append("circle")
 		.attr("class", function(d){ return "tram_" + d.line + " tramGroup";})
-			.attr("r", "5px")
+			.attr("r", "10px")
 			.attr("cx", function(d){ return scaleLon(d.lon);})
 			.attr("cy", function(d){ return scaleLat(d.lat);})
 			.attr('stroke',function(d){
@@ -404,7 +405,7 @@ $.ajax({
 		
 		
 		// step JOIN
-		var tramLabels = d3.select("#mapPanel").selectAll("text.tramGroup")
+		var tramLabels = d3.select("#mapPanel").selectAll("text.tramGroup.tramDelay")
 						   .data(data, function(d) { return d.brigade + d.line; }) //using key, czy na pewno to wystarczy do identyfikacji
 						   			   
 		// step: UPDATE					   
@@ -421,7 +422,7 @@ $.ajax({
 			
 		// step: ENTER		
 		tramLabels.enter().append("text")
-		.attr("class", function(d){ return "tram_" + d.line + " tramGroup";})
+		.attr("class", function(d){ return "tram_" + d.line + " tramGroup" + " tramDelay";})
 			.attr("x", function(d){ return scaleLon(d.lon)-10;})
 			.attr("y", function(d){ return scaleLat(d.lat)+5;})
 			.style("text-anchor", "end")
@@ -431,12 +432,45 @@ $.ajax({
 				else{ return "red";}
 				})
 			.text(function(d){ return Math.ceil(d.delay/60)+ " min"})
-		.merge(tramCircles)
+		.merge(tramLabels)
 		
 		
 		
 		// step: EXIT
 		tramLabels.exit().remove();
+		
+		
+		// 4. labels with line number
+		
+		
+		
+		// step JOIN
+		var tramLineNumber = d3.select("#mapPanel").selectAll("text.tramGroup.tramNumber")
+						   .data(data, function(d) { return d.brigade + d.line; }) //using key, czy na pewno to wystarczy do identyfikacji
+						   			   
+		// step: UPDATE					   
+		tramLineNumber
+			.transition()
+			.duration(5000)
+			.attr("x", function(d){ return scaleLon(d.lon);})
+			.attr("y", function(d){ return scaleLat(d.lat)+4;})
+			.text(function(d){ return d.line; });
+			
+		// step: ENTER		
+		tramLineNumber.enter().append("text")
+		.attr("class", function(d){ return "tram_" + d.line + " tramGroup" +  " tramNumber";})
+			.attr("x", function(d){ return scaleLon(d.lon);})
+			.attr("y", function(d){ return scaleLat(d.lat)+4;})
+			.style("text-anchor", "middle")
+			.style("font-size", "10px")
+		    .attr('fill',"white")
+			.text(function(d){ return d.line; })
+		.merge(tramLineNumber)
+		
+		
+		
+		// step: EXIT
+		tramLineNumber.exit().remove();
 
 		
 	}	
