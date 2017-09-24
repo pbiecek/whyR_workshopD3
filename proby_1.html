@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
+<meta charset="utf-8">
+
 	<title>
 	Tramwajem do PW
 	</title>
@@ -277,28 +279,34 @@ $.ajax({
 	
 			//moze zrobic selekcje kolumn, dodac filtr ze wzgledu na date
 	
-	
+			
+			// filtration of data					   
+			data = data.filter( function(d) { 	
+			
+			    return d.timetableStatut != "MISSING";
+			});		
+			
+			// najpozniejszy czas					   
+			var dates = d3.map(data,function(d){  return d.time;}).keys();
+			var max_data = d3.max(dates, function(d) {return new Date(d);});
+			var max_data_string = max_data.getUTCHours() + ":" + max_data.getUTCMinutes() + " " + max_data.toLocaleDateString("pl");
+			
+			
+			data = data.filter( function(d) { 	
+			
+			    var d1 = new Date(d.time)
+				var limit = d3.max(dates, function(d) {return new Date(d);});
+				limit.setHours(limit.getHours() - 3);
+			    return  d1 > limit;
+			});		
 			
 			data.map(cleanTramStopName); //map works on data!, cleaning names of stops
 			data = data.sort( function(x,y){ return (x.delay >= y.delay) ? -1 : 1;}); // sort data according to amount of delay
 			data.map( function(d,i) {d.delay = Math.ceil(d.delay/60); // create new needed data
 								   d.position = i+1;
-								   d.day = d.time.substring(0,10);
-								   d.hour = +d.time.substring(11,13);
 								   })
-								   
-			
-			// filtration of data					   
-			data = data.filter( function(d) { 	
-			    return d.timetableStatut != "MISSING";
-			});					   
-								   
-								   
-			return  data;
-
-		
-		
 	
+			return  {"data": data, "max_data": max_data_string};
 	
 	}			
 
@@ -412,7 +420,7 @@ $.ajax({
 		tramLabels
 			.transition()
 			.duration(5000)
-			.attr("x", function(d){ return scaleLon(d.lon)-10;})
+			.attr("x", function(d){ return scaleLon(d.lon)-12;})
 			.attr("y", function(d){ return scaleLat(d.lat)+5;})
 			.attr('fill',function(d){
 				if(Math.ceil(d.delay/60) <= 0){ return "green";}
@@ -423,7 +431,7 @@ $.ajax({
 		// step: ENTER		
 		tramLabels.enter().append("text")
 		.attr("class", function(d){ return "tram_" + d.line + " tramGroup" + " tramDelay";})
-			.attr("x", function(d){ return scaleLon(d.lon)-10;})
+			.attr("x", function(d){ return scaleLon(d.lon)-12;})
 			.attr("y", function(d){ return scaleLat(d.lat)+5;})
 			.style("text-anchor", "end")
 			.style("font-size", "12px")
@@ -463,6 +471,7 @@ $.ajax({
 			.attr("y", function(d){ return scaleLat(d.lat)+4;})
 			.style("text-anchor", "middle")
 			.style("font-size", "10px")
+			.style("pointer-events", "none")
 		    .attr('fill',"white")
 			.text(function(d){ return d.line; })
 		.merge(tramLineNumber)
@@ -703,11 +712,14 @@ $.ajax({
 		console.log("New data");
 		// update of the map
 		var dataToMap = prepareData(data);
-		updateMap(dataToMap);
+		updateMap(dataToMap.data);
 		updateTooltipTrams();
 	
 		// update of leaders in delays ranking
-		updateTable(dataToMap);
+		updateTable(dataToMap.data);
+		
+		// update title
+		title.text("AKTUALNY RUCH TRAMWAJÓW WOKÓŁ PW, stan na " + dataToMap.max_data)
 		}
 	}			
 
